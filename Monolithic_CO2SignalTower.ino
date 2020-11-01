@@ -146,7 +146,7 @@ void preheat() {                            // 180 sec preheating
 
 void oled() {          
 
-     int bargraph = ((CO2-400)*122/WARN-400); 
+     int bargraph = ((CO2-400)*122/(WARN-400)); 
      if (bargraph >= 122){
         bargraph = 122;
       }
