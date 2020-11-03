@@ -24,9 +24,8 @@ const long intervalCO2 = 5000;        //Measurement Interval
  *      Normal:   1500
  *      Covid-19: 1200
 */
-
-int ALERT = 1200;
 int WARN = 800;
+int ALERT = 1200;
 
 SoftwareSerial CO2Serial (D6, D7);    // RX, TX Pins Setup for Wemos Mini Pro to keep the HW I2C free for display and other sensors
 MHZ19 mhz(&CO2Serial);
@@ -122,16 +121,17 @@ void preheat() {                            // 180 sec preheating
     pixels.setPixelColor(i,0,0,5);         
     pixels.show();                          
     
-    int bargraph =((12-i)*122/12);     
+    int bargraph =((12-i)*122/12);          //OLED Stuff
       
      u8g2.clearBuffer();
      u8g2.drawFrame(0, 0, 128, 16);
      u8g2.drawBox(3, 3, bargraph, 10);
 
      u8g2.setCursor(0, 20);
-     u8g2.setFont(u8g2_font_profont12_mf);
-     u8g2.print("Ready in");
-     u8g2.setCursor(92, 20);
+     u8g2.setFont(u8g2_font_profont15_tf);
+     u8g2.println("Preheating... ");
+     u8g2.setCursor(0, 40);
+     u8g2.print("Ready in ");
      if (180-15*i < 100){
      u8g2.print(" ");}
      u8g2.print(180-15*i);
@@ -144,7 +144,7 @@ void preheat() {                            // 180 sec preheating
     pixels.clear();
 }
 
-void oled() {          
+void oled() {                           
 
      int bargraph = ((CO2-400)*122/(WARN-400)); 
      if (bargraph >= 122){
@@ -154,25 +154,20 @@ void oled() {
      u8g2.clearBuffer();
      u8g2.drawFrame(0, 0, 128, 16);
      u8g2.drawBox(3, 3, bargraph, 10);
-
+     
      u8g2.setCursor(0, 20);
-     u8g2.setFont(u8g2_font_profont12_mf);
-      u8g2.print("CO2: ");
-     u8g2.setCursor(45, 20);
-     u8g2.setFont(u8g2_font_profont22_mf);
+     u8g2.setFont(u8g2_font_logisoso42_tf);
       if (CO2 <1000){
       u8g2.print(" ");}
       u8g2.print(CO2);
-      u8g2.print("ppm");
 
-     u8g2.setCursor(0, 43);
-     u8g2.setFont(u8g2_font_profont12_mf);
-      u8g2.print("Temp: ");
-     u8g2.setCursor(45, 43);
-     u8g2.setFont(u8g2_font_profont22_mf);
-      u8g2.print("  ");
-      u8g2.print(TEMP);
-      u8g2.print("C");
+     u8g2.setCursor(110, 30);
+     u8g2.setFont(u8g2_font_profont12_tf);
+      u8g2.print("CO2");
+
+     u8g2.drawLine(110, 44, 128, 44); 
+     u8g2.setCursor(110, 44);
+      u8g2.print("ppm");
 
     u8g2.sendBuffer();
 }
