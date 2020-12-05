@@ -7,13 +7,17 @@
 
 #define PIXEL_PIN   D5                // Digital IO pin connected to the NeoPixels.
 #define PIXEL_COUNT 12                // No. of LEDs
-int  CO2;                           
+int CO2 = 400;
+int CO2buffer = 400;                           
 int TEMP;
 uint16_t pos = 0;
 int tail = 3;
+int bargraph;
+int countdown;
 unsigned long previousMillis = 0;
 unsigned long currentMillis = 0;
 const long intervalCO2 = 5000;        //Measurement Interval
+const long intervalPre = 15000;      //Preheat Interval
 
 /* Recommended Settings for   
  * - Warn-Limit with Yellow Signal
@@ -35,6 +39,8 @@ U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
 void setup(){            
   
   CO2Serial.begin(9600);              //Softserial
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, HIGH); 
    
   u8g2.begin();                       //Display init
   u8g2.clear();
@@ -62,6 +68,9 @@ MHZ19_RESULT response = mhz.retrieveData();
           previousMillis = currentMillis;
           CO2 = mhz.getCO2();
           TEMP = mhz.getTemperature();
+          digitalWrite(LED_BUILTIN, LOW);
+          delay(50);
+          digitalWrite(LED_BUILTIN, HIGH); 
           oled(); 
       Serial.print(CO2);
       Serial.println(" PPM");
@@ -81,7 +90,7 @@ MHZ19_RESULT response = mhz.retrieveData();
   }
 
   pixels.show();
-  delay(25); 
+  delay(20);
   pos = (pos + 1) % pixels.numPixels();  
 }
 
@@ -98,7 +107,7 @@ MHZ19_RESULT response = mhz.retrieveData();
   }
 
   pixels.show();
-  delay(50); 
+  delay(40); 
   pos = (pos + 1) % pixels.numPixels();  
   }
 
@@ -117,11 +126,18 @@ MHZ19_RESULT response = mhz.retrieveData();
 }
 
 void preheat() {                            // 180 sec preheating 
-  for(int i=0; i<pixels.numPixels(); i++) { 
-    pixels.setPixelColor(i,0,0,5);         
-    pixels.show();                          
+  int i=0;
+  unsigned long startcount = millis();
+  do{
     
-    int bargraph =((12-i)*122/12);          //OLED Stuff
+       currentMillis = millis();
+   if (currentMillis - previousMillis >= intervalPre){
+      previousMillis = currentMillis;                                              
+      i++;     
+    }
+
+     countdown = ((180000-millis()+startcount)/1000);                     
+     bargraph =((180-countdown)*122/180);          //OLED Stuff
       
      u8g2.clearBuffer();
      u8g2.drawFrame(0, 0, 128, 16);
@@ -132,26 +148,40 @@ void preheat() {                            // 180 sec preheating
      u8g2.println("Preheating... ");
      u8g2.setCursor(0, 40);
      u8g2.print("Ready in ");
-     if (180-15*i < 100){
+     if (countdown < 100){
      u8g2.print(" ");}
-     u8g2.print(180-15*i);
+     if (countdown < 10){
+     u8g2.print(" ");}
+     u8g2.print(countdown);
      u8g2.print("sec");
-     
-     u8g2.sendBuffer();
 
-    delay(15000);                                                 
-    }
-    pixels.clear();
+      pixels.setPixelColor(i,0,0,5);         
+      pixels.show(); 
+      u8g2.sendBuffer();
+      delay(50);
+  }while (i<pixels.numPixels() && countdown>0);
+  pixels.clear();
+  u8g2.clearBuffer();
 }
 
 void oled() {                           
 
-     int bargraph = ((CO2-400)*122/(WARN-400)); 
+do{
+  u8g2.clearBuffer();
+  if (CO2 > CO2buffer){
+    CO2buffer++;
+    u8g2.drawTriangle(119,20, 112,28, 126,28);  
+  }
+  else if (CO2 < CO2buffer){
+    CO2buffer--;
+    u8g2.drawTriangle(119,28, 112,20, 126,20);
+  }
+
+         bargraph = ((CO2buffer-400)*122/(WARN-400)); 
      if (bargraph >= 122){
         bargraph = 122;
       }
 
-     u8g2.clearBuffer();
      u8g2.drawFrame(0, 0, 128, 16);
      u8g2.drawBox(3, 3, bargraph, 10);
      
@@ -159,15 +189,20 @@ void oled() {
      u8g2.setFont(u8g2_font_logisoso42_tf);
       if (CO2 <1000){
       u8g2.print(" ");}
-      u8g2.print(CO2);
 
-     u8g2.setCursor(110, 30);
+      u8g2.print(CO2buffer);
+
+      u8g2.drawLine(110, 31, 128, 31);
+     u8g2.setCursor(110, 34);
      u8g2.setFont(u8g2_font_profont12_tf);
       u8g2.print("CO2");
 
-     u8g2.drawLine(110, 44, 128, 44); 
-     u8g2.setCursor(110, 44);
+     u8g2.drawLine(110, 47, 128, 47); 
+     u8g2.setCursor(110, 48);
       u8g2.print("ppm");
-
+    u8g2.drawLine(110, 63, 128, 63);
     u8g2.sendBuffer();
+    delay(50);
+
+}while(CO2buffer != CO2); 
 }
