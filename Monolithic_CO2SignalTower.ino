@@ -8,7 +8,8 @@
 #define PIXEL_PIN   D5                // Digital IO pin connected to the NeoPixels.
 #define PIXEL_COUNT 12                // No. of LEDs
 int CO2 = 400;
-int CO2buffer = 400;                           
+int CO2buffer = 400;
+bool state = false;                           
 int TEMP;
 uint16_t pos = 0;
 int tail = 3;
@@ -65,13 +66,17 @@ void loop(){
 currentMillis = millis();
 MHZ19_RESULT response = mhz.retrieveData();
 
-      if (response == MHZ19_RESULT_OK and currentMillis - previousMillis >= intervalCO2){
+      if (response == MHZ19_RESULT_OK && currentMillis - previousMillis >= intervalCO2){
           previousMillis = currentMillis;
           CO2 = mhz.getCO2();
           TEMP = mhz.getTemperature();
           digitalWrite(LED_BUILTIN, LOW);
           delay(50);
           digitalWrite(LED_BUILTIN, HIGH); 
+          if (state == false){
+            CO2buffer = CO2;
+            state = true;
+          }
           oled(); 
       Serial.print(CO2);
       Serial.println(" PPM");
