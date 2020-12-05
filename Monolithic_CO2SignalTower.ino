@@ -48,6 +48,7 @@ void setup(){
   u8g2.setDrawColor(1);
   u8g2.setFontPosTop();
   u8g2.setFontDirection(0);
+  u8g2.setContrast(50);               //Setting Brightness of the OLED Display
   
   pixels.begin();                     // WS2812B RGB init        
   pixels.show();
@@ -161,7 +162,7 @@ void preheat() {                            // 180 sec preheating
       delay(50);
   }while (i<pixels.numPixels() && countdown>0);
   pixels.clear();
-  u8g2.clearBuffer();
+  u8g2.clear();
 }
 
 void oled() {                           
@@ -177,7 +178,7 @@ do{
     u8g2.drawTriangle(119,28, 112,20, 126,20);
   }
 
-         bargraph = ((CO2buffer-400)*122/(WARN-400)); 
+        bargraph = ((CO2buffer-400)*122/(WARN-400)); 
      if (bargraph >= 122){
         bargraph = 122;
       }
@@ -202,7 +203,7 @@ do{
       u8g2.print("ppm");
     u8g2.drawLine(110, 63, 128, 63);
     u8g2.sendBuffer();
-    delay(50);
+    delay(30);
 
 }while(CO2buffer != CO2); 
 }
