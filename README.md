@@ -1,6 +1,6 @@
 # Monolithic_CO2SignalTower
 
-##Pinout:
+## Pinout:
 
 - 5V  - Vin MH-Z19B / VCC LED Ring
 - GND - GND MH-Z19B / GND LED Ring
@@ -8,6 +8,6 @@
 - D6  - TX MH-Z19B
 - D7  - RX MH-Z19B
 
-##Optional OLED:
+## Optional OLED:
 - D1  - SCL OLED
 - D2  - SDA OLED
