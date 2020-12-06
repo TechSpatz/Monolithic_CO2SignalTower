@@ -52,12 +52,9 @@ void setup(){
   
   pixels.begin();                     // WS2812B RGB init        
   pixels.show();
-  Serial.begin(9600);                 // Start Serial
-  Serial.println("");   
-  delay(1000);
-  Serial.println("Preheating... ~3min");
+  Serial.begin(9600);                 // Start Serial 
   preheat();                          // Preheating sequence 
-  Serial.println("Start measurement"); 
+
 }
 
 void loop(){
@@ -74,24 +71,67 @@ if (response == MHZ19_RESULT_OK && currentMillis - previousMillis >= intervalCO2
             state = true;
           }
       Serial.print(CO2);
-      Serial.println(" PPM");
+      Serial.print(" PPM\t");
       Serial.print(TEMP);
-      Serial.println("°C");
+      Serial.println(" °C");
+  }
+  oled();
+  ledring();     
 }
 
-if (CO2buffer != CO2 && state == true ){           // Display Output
+void preheat() {                            // 180 sec preheating 
+  int i=0;
+  unsigned long startcount = millis();
+  do{
+    
+       currentMillis = millis();
+   if (currentMillis - previousMillis >= intervalPre){
+      previousMillis = currentMillis;                                              
+      i++;     
+    }
+
+     countdown = ((180000-millis()+startcount)/1000);                     
+     bargraph =((180-countdown)*122/180);          //OLED Stuff
+      
+     u8g2.clearBuffer();
+     u8g2.drawFrame(0, 0, 128, 16);
+     u8g2.drawBox(3, 3, bargraph, 10);
+
+     u8g2.setCursor(0, 20);
+     u8g2.setFont(u8g2_font_profont15_tf);
+     u8g2.println("Preheating... ");
+     u8g2.setCursor(0, 40);
+     u8g2.print("Ready in ");
+     if (countdown < 100){
+     u8g2.print(" ");}
+     if (countdown < 10){
+     u8g2.print(" ");}
+     u8g2.print(countdown);
+     u8g2.print("sec");
+
+      pixels.setPixelColor(i,0,0,5);         
+      pixels.show(); 
+      u8g2.sendBuffer();
+      delay(50);
+  }while (i<pixels.numPixels() && countdown>0);
+  pixels.clear();
+  u8g2.clear();
+}
+
+void oled(){                             // Display Output
+if (CO2buffer != CO2 && state == true ){
   u8g2.clearBuffer();         
   if (CO2 > CO2buffer){
     CO2buffer++;
     u8g2.drawTriangle(119,20, 112,28, 126,28);
-    if (CO2 - CO2buffer >= 50){
+    if (CO2 - CO2buffer >= 100){
       CO2buffer = CO2;  
     }
   }
   else if (CO2 < CO2buffer){
     CO2buffer--;
     u8g2.drawTriangle(119,28, 112,20, 126,20);
-        if (CO2buffer - CO2 >= 50){
+        if (CO2buffer - CO2 >= 100){
       CO2buffer = CO2;  
     }
   }
@@ -121,8 +161,10 @@ if (CO2buffer != CO2 && state == true ){           // Display Output
       u8g2.print("ppm");
     u8g2.drawLine(110, 63, 128, 63);
     u8g2.sendBuffer();
+  }  
 }
-   
+
+void ledring(){
 if (CO2 >= ALERT){               // Alert - Red 
 
   for(uint16_t i=0; i<pixels.numPixels(); i++){
@@ -165,45 +207,6 @@ else {                          // Normal - Green
     pixels.setPixelColor(7,0,25,0);
     pixels.setPixelColor(10,0,25,0);
     pixels.show();
-}    
   }    
-}
-
-void preheat() {                            // 180 sec preheating 
-  int i=0;
-  unsigned long startcount = millis();
-  do{
-    
-       currentMillis = millis();
-   if (currentMillis - previousMillis >= intervalPre){
-      previousMillis = currentMillis;                                              
-      i++;     
-    }
-
-     countdown = ((180000-millis()+startcount)/1000);                     
-     bargraph =((180-countdown)*122/180);          //OLED Stuff
-      
-     u8g2.clearBuffer();
-     u8g2.drawFrame(0, 0, 128, 16);
-     u8g2.drawBox(3, 3, bargraph, 10);
-
-     u8g2.setCursor(0, 20);
-     u8g2.setFont(u8g2_font_profont15_tf);
-     u8g2.println("Preheating... ");
-     u8g2.setCursor(0, 40);
-     u8g2.print("Ready in ");
-     if (countdown < 100){
-     u8g2.print(" ");}
-     if (countdown < 10){
-     u8g2.print(" ");}
-     u8g2.print(countdown);
-     u8g2.print("sec");
-
-      pixels.setPixelColor(i,0,0,5);         
-      pixels.show(); 
-      u8g2.sendBuffer();
-      delay(50);
-  }while (i<pixels.numPixels() && countdown>0);
-  pixels.clear();
-  u8g2.clear();
+}   
 }
